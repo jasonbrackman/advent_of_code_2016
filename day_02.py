@@ -1,24 +1,15 @@
 import helpers
 
-directions = {
-    'R': (0, 1),
-    'L': (0, -1),
-    'U': (-1, 0),
-    'D': (1, 0),
-}
+directions = {"R": (0, 1), "L": (0, -1), "U": (-1, 0), "D": (1, 0)}
 
-pad_01 = [
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9],
-]
+pad_01 = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 
 pad_02 = [
     [0, 0, 1, 0, 0],
     [0, 2, 3, 4, 0],
     [5, 6, 7, 8, 9],
-    [0, 'A', 'B', 'C', 0],
-    [0, 0, 'D', 0, 0],
+    [0, "A", "B", "C", 0],
+    [0, 0, "D", 0, 0],
 ]
 
 
@@ -36,7 +27,7 @@ def add_positions(pos1, pos2):
     x1, y1 = pos1
     x2, y2 = pos2
 
-    return x1+x2, y1+y2
+    return x1 + x2, y1 + y2
 
 
 def solve(instructions, pad, current):
@@ -54,22 +45,23 @@ def solve(instructions, pad, current):
 
 
 def test_parts():
-    instructions = [convert_to_positions(line) for line in ["ULL", "RRDDD", "LURDL", "UUUUD"]]
-    result = solve(instructions, pad_01, current=(1, 1)
-    )
+    instructions = [
+        convert_to_positions(line) for line in ["ULL", "RRDDD", "LURDL", "UUUUD"]
+    ]
+    result = solve(instructions, pad_01, current=(1, 1))
     assert result == [1, 9, 8, 5]
 
     result = solve(instructions, pad_02, current=(2, 0))
-    assert result == [5, 'D', 'B', 3]
+    assert result == [5, "D", "B", 3]
 
 
 def part_01(instructions):
-    result = ''.join(str(i) for i in solve(instructions, pad_01, current=(1, 1)))
+    result = "".join(str(i) for i in solve(instructions, pad_01, current=(1, 1)))
     return result
 
 
 def part_02(instructions):
-    result = ''.join(str(i) for i in solve(instructions, pad_02, current=(2, 0)))
+    result = "".join(str(i) for i in solve(instructions, pad_02, current=(2, 0)))
     return result
 
 
