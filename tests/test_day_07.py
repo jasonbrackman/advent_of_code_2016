@@ -1,4 +1,3 @@
-
 import unittest
 import day_07
 
@@ -9,7 +8,7 @@ class TestDay07(unittest.TestCase):
         "abcd[bddb]xyyx",
         "aaaa[qwer]tyui",
         "ioxxoj[asdfgh]zxcvbn",
-        "sdfs[fsdf]wer[ewer]fff"
+        "sdfs[fsdf]wer[ewer]fff",
     ]
 
     def test_parse_line(self):
@@ -24,6 +23,7 @@ class TestDay07(unittest.TestCase):
          does not support TLS (aaaa is invalid; the interior characters must be different).
          supports TLS (oxxo is outside square brackets, even though it's within a larger string).
         """
+
 
 if __name__ == "__main__":
     unittest.main()

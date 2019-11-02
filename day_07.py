@@ -71,7 +71,6 @@ def supports_ssl(lines):
     counter = 0
 
     for index, line in enumerate(lines):
-        should_continue = True
         in_brackets, out_brackets = get_groups_of_data(line)
         if contains_aba_bab(in_brackets, out_brackets):
             counter += 1
