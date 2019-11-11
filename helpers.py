@@ -22,6 +22,7 @@
 
 import json
 import time
+from collections import deque
 from multiprocessing import Pool
 from typing import List
 
@@ -48,3 +49,49 @@ def time_it(command):
 def time_it_all(args: List):
     with Pool(4) as p:
         p.map(time_it, args)
+
+
+class Node:
+    def __init__(self, state, parent):
+        self.state = state
+        self.parent = parent
+
+    def __repr__(self):
+        return f"Node({self.state!r}, {self.parent!r})"
+
+
+def bfs(state, goal, successors):
+    frontier = deque([Node(state, None)])
+    visited = {hash(state)}
+
+    count = 1
+    while frontier:
+        count += 1
+        current_node = frontier.popleft()
+        current_state = current_node.state
+
+        if goal(current_state):
+            # print(f"Processed {count} nodes.")
+            return current_node
+
+        for neighbor in successors(current_state):
+            if hash(neighbor) in visited:
+                continue
+            visited.add(hash(neighbor))
+            frontier.append(Node(neighbor, current_node))
+
+    return None
+
+
+def get_node_path_results(result, silent=True):
+    flatten_nodes = list()
+    if result is not None:
+        flatten_nodes.append(result.state)
+        while result.parent:
+            result = result.parent
+            flatten_nodes.append(result.state)
+    for n in reversed(flatten_nodes):
+        if not silent:
+            print(n)
+
+    return len(flatten_nodes)

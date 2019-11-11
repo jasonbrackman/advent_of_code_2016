@@ -1,44 +1,6 @@
 from typing import List, Dict, Tuple
-from collections import deque
 from itertools import combinations
-
-
-class Node:
-    def __init__(self, state, parent):
-        self.state = state
-        self.parent = parent
-
-    def __repr__(self):
-        return f"Node({self.state!r}, {self.parent!r})"
-
-
-def bfs(state, goal, successors):
-    frontier = deque([Node(state, None)])
-    visited = {hash(state)}
-
-    count = 1
-    while frontier:
-        count += 1
-        current_node = frontier.popleft()
-        current_state = current_node.state
-
-        if goal(current_state):
-            # print(f"Processed {count} nodes.")
-            return current_node
-
-        for neighbor in successors(current_state):
-            if hash(neighbor) in visited:
-                continue
-            visited.add(hash(neighbor))
-            frontier.append(Node(neighbor, current_node))
-
-    return None
-
-
-class Item:
-    def __init__(self, name, type_):
-        self.name = name
-        self.type = type_
+from helpers import bfs, get_node_path_results
 
 
 class ElevatorState:
@@ -150,20 +112,6 @@ class ElevatorState:
         return pairs, orphans
 
 
-def get_results(result, silent=True):
-    flatten_nodes = list()
-    if result is not None:
-        flatten_nodes.append(result.state)
-        while result.parent:
-            result = result.parent
-            flatten_nodes.append(result.state)
-    for n in reversed(flatten_nodes):
-        if not silent:
-            print(n)
-
-    return len(flatten_nodes)
-
-
 if __name__ == "__main__":
 
     current_floor = 1
@@ -173,7 +121,7 @@ if __name__ == "__main__":
     floor_01 = ["hm", "lm"]
     e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
-    response = get_results(r, silent=True)
+    response = get_node_path_results(r, silent=True)
     # print(response - 1)
     assert response - 1 == 11, f"expected 11, but received [{response}]."
 
@@ -184,7 +132,7 @@ if __name__ == "__main__":
     floor_01 = ["lm"]
     e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
-    response = get_results(r, silent=True)
+    response = get_node_path_results(r, silent=True)
     # print(response - 1)
     assert response - 1 == 6
 
@@ -196,7 +144,7 @@ if __name__ == "__main__":
     e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
 
-    response = get_results(r, silent=True)
+    response = get_node_path_results(r, silent=True)
     # print(response - 1)
     assert response - 1 == 47
 
@@ -222,6 +170,6 @@ if __name__ == "__main__":
     e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
 
-    response = get_results(r, silent=True)
+    response = get_node_path_results(r, silent=True)
     # print(response-1)
     assert response - 1 == 71
