@@ -1,5 +1,6 @@
 from typing import List, Dict, Tuple
 from collections import deque
+from itertools import combinations
 
 
 class Node:
@@ -22,9 +23,9 @@ def bfs(state, goal, successors):
         current_node = frontier.popleft()
         current_state = current_node.state
 
-        if count % 1_000 == 0:
-            print(f"[{count}] Still Working...")
-            print(current_state)
+        # if count % 1_000 == 0:
+        #     print(f"[{count}] Still Working...")
+        #     print(current_state)
 
         if goal(current_state):
             print(f"Processed {count} nodes.")
@@ -34,7 +35,8 @@ def bfs(state, goal, successors):
             if hash(neighbor) in visited:
                 continue
             visited.add(hash(neighbor))
-            frontier.append(Node(neighbor, current_node))
+            if neighbor.is_legal():
+                frontier.append(Node(neighbor, current_node))
 
     return None
 
@@ -77,6 +79,9 @@ class ElevatorState:
         return self.floor[1] == self.floor[2] == self.floor[3] == []
 
     def is_legal(self) -> bool:
+        if not 1 <= self.cf <= 4:
+            return False
+
         for floor in [self.floor[1], self.floor[2], self.floor[3], self.floor[4]]:
             pairs, orphans = self.get_pairs_and_orphans(floor)
 
@@ -91,73 +96,34 @@ class ElevatorState:
 
         return True
 
-    def get_min_floor(self):
-        min_ = 1
-        if len(self.floor[1]) == 0:
-            min_ = 2
-        if min_ == 2 and len(self.floor[2]) == 0:
-            min_ = 3
-        return min_
-
     def successors(self):
         sucs: List[ElevatorState] = []
 
-        min_ = self.get_min_floor()
+        # Get current, lower, and upper floor numbers in short-hand
         cf = self.cf
         lf = cf - 1
         uf = cf + 1
 
-        # exit early if elevator is oob
-        if cf < min_ or cf > 4:
-            return sucs
-
         # get info for options about moving between floors
         pairs, orphans = self.get_pairs_and_orphans(self.floor[cf])
-        if len(self.floor[4]) >= 5 and cf == 4:
-            print("Interesting")
-            print(self)
+
+        for (a, b) in combinations(self.floor[cf], 2):
+            temp = self.get_window((a, b), lf)
+            es = ElevatorState(lf, temp[1], temp[2], temp[3], temp[4])
+            sucs.append(es)
+
+            temp = self.get_window((a, b), uf)
+            es = ElevatorState(uf, temp[1], temp[2], temp[3], temp[4])
+            sucs.append(es)
 
         for orphan in orphans:
+            temp = self.get_window((orphan,), lf)
+            es = ElevatorState(lf, temp[1], temp[2], temp[3], temp[4])
+            sucs.append(es)
 
-            if lf >= min_:
-                temp = self.get_window((orphan,), lf)
-                es = ElevatorState(lf, temp[1], temp[2], temp[3], temp[4])
-                if es.is_legal():
-                    sucs.append(es)
-
-            if uf <= 4:
-                temp = self.get_window((orphan,), uf)
-                es = ElevatorState(uf, temp[1], temp[2], temp[3], temp[4])
-                if es.is_legal():
-                    sucs.append(es)
-
-        for (a, b) in zip(orphans, orphans[1:]):
-
-            # if lf >= min_:
-            #     temp = self.get_window((a,), lf)
-            #     es = ElevatorState(lf, temp[1], temp[2], temp[3], temp[4])
-            #     if es.is_legal():
-            #         sucs.append(es)
-
-            if uf <= 4:
-                temp = self.get_window((a, b), uf)
-                es = ElevatorState(uf, temp[1], temp[2], temp[3], temp[4])
-                if es.is_legal():
-                    sucs.append(es)
-
-        for pair in pairs:
-            if lf >= min_:
-                for item in pair:
-                    temp = self.get_window((item,), lf)
-                    es = ElevatorState(lf, temp[1], temp[2], temp[3], temp[4])
-                    if es.is_legal():
-                        sucs.append(es)
-
-            if uf <= 4:
-                temp = self.get_window(pair, uf)
-                es = ElevatorState(uf, temp[1], temp[2], temp[3], temp[4])
-                if es.is_legal():
-                    sucs.append(es)
+            temp = self.get_window((orphan,), uf)
+            es = ElevatorState(uf, temp[1], temp[2], temp[3], temp[4])
+            sucs.append(es)
 
         return sucs
 
@@ -217,7 +183,7 @@ if __name__ == "__main__":
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
     response = print_results(r)
     print(response - 1)
-    assert response - 1 == 11
+    assert response - 1 == 11, f"expected 11, but received [{response}]."
 
     current_floor = 4
     floor_04 = ["lg"]
@@ -234,7 +200,7 @@ if __name__ == "__main__":
     floor_04 = []
     floor_03 = []
     floor_02 = ["polm", "prom"]
-    floor_01 = ["polg", "prog", "tg", "tm"] #, "rg", "rm", "cg", "cm"]
+    floor_01 = ["polg", "prog", "tg", "tm", "rg", "rm", "cg", "cm"]
     e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
 
