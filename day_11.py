@@ -23,15 +23,14 @@ def bfs(state, goal, successors):
         current_state = current_node.state
 
         if goal(current_state):
-            print(f"Processed {count} nodes.")
+            # print(f"Processed {count} nodes.")
             return current_node
 
         for neighbor in successors(current_state):
             if hash(neighbor) in visited:
                 continue
             visited.add(hash(neighbor))
-            if neighbor.is_legal():
-                frontier.append(Node(neighbor, current_node))
+            frontier.append(Node(neighbor, current_node))
 
     return None
 
@@ -47,19 +46,16 @@ class ElevatorState:
     # 2. Must have a generator or microchip (or both) to run the elevator
     # 3. a microchip cannot be on a floor with a mismatching generator without its sister generator
 
-    def __init__(self, cf: int, f1: List[str], f2: List[str], f3: List[str], f4: List[str]):
+    def __init__(
+        self, cf: int, f1: List[str], f2: List[str], f3: List[str], f4: List[str]
+    ):
 
         self.cf: int = cf
-        self.floor: dict = {
-            1: f1,
-            2: f2,
-            3: f3,
-            4: f4,
-        }
+        self.floor: dict = {1: f1, 2: f2, 3: f3, 4: f4}
 
     def __str__(self) -> str:
         return (
-            f"F4 {'E' if self.cf == 4 else '.'}  {self.floor[4]}\n" 
+            f"F4 {'E' if self.cf == 4 else '.'}  {self.floor[4]}\n"
             f"F3 {'E' if self.cf == 3 else '.'}  {self.floor[3]}\n"
             f"F2 {'E' if self.cf == 2 else '.'}  {self.floor[2]}\n"
             f"F1 {'E' if self.cf == 1 else '.'}  {self.floor[1]}\n"
@@ -82,7 +78,7 @@ class ElevatorState:
             if len(set(o[-1] for o in orphans)) == 2:
                 return False
 
-            if pairs and any(o.endswith('m') for o in orphans):
+            if pairs and any(o.endswith("m") for o in orphans):
                 return False
 
         return True
@@ -101,20 +97,24 @@ class ElevatorState:
         for (a, b) in combinations(self.floor[cf], 2):
             temp = self.get_window((a, b), lf)
             es = ElevatorState(lf, temp[1], temp[2], temp[3], temp[4])
-            sucs.append(es)
+            if es.is_legal():
+                sucs.append(es)
 
             temp = self.get_window((a, b), uf)
             es = ElevatorState(uf, temp[1], temp[2], temp[3], temp[4])
-            sucs.append(es)
+            if es.is_legal():
+                sucs.append(es)
 
         for orphan in orphans:
             temp = self.get_window((orphan,), lf)
             es = ElevatorState(lf, temp[1], temp[2], temp[3], temp[4])
-            sucs.append(es)
+            if es.is_legal():
+                sucs.append(es)
 
             temp = self.get_window((orphan,), uf)
             es = ElevatorState(uf, temp[1], temp[2], temp[3], temp[4])
-            sucs.append(es)
+            if es.is_legal():
+                sucs.append(es)
 
         return sucs
 
@@ -139,18 +139,18 @@ class ElevatorState:
         orphans = []
         names = {n[:-1] for n in param}
         for name in names:
-            if name + 'g' in param:
-                if name + 'm' in param:
-                    pairs.append((name + 'g', name + 'm'))
+            if name + "g" in param:
+                if name + "m" in param:
+                    pairs.append((name + "g", name + "m"))
                 else:
-                    orphans.append(name + 'g')
+                    orphans.append(name + "g")
             else:
-                orphans.append(name + 'm')
+                orphans.append(name + "m")
 
         return pairs, orphans
 
 
-def print_results(result):
+def get_results(result, silent=True):
     flatten_nodes = list()
     if result is not None:
         flatten_nodes.append(result.state)
@@ -158,7 +158,8 @@ def print_results(result):
             result = result.parent
             flatten_nodes.append(result.state)
     for n in reversed(flatten_nodes):
-        print(n)
+        if not silent:
+            print(n)
 
     return len(flatten_nodes)
 
@@ -172,7 +173,7 @@ if __name__ == "__main__":
     floor_01 = ["hm", "lm"]
     e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
-    response = print_results(r)
+    response = get_results(r, silent=True)
     # print(response - 1)
     assert response - 1 == 11, f"expected 11, but received [{response}]."
 
@@ -183,7 +184,7 @@ if __name__ == "__main__":
     floor_01 = ["lm"]
     e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
-    response = print_results(r)
+    response = get_results(r, silent=True)
     # print(response - 1)
     assert response - 1 == 6
 
@@ -195,7 +196,7 @@ if __name__ == "__main__":
     e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
 
-    response = print_results(r)
+    response = get_results(r, silent=True)
     # print(response - 1)
     assert response - 1 == 47
 
@@ -204,11 +205,23 @@ if __name__ == "__main__":
     floor_04 = []
     floor_03 = []
     floor_02 = ["polm", "prom"]
-    floor_01 = ["polg", "prog", "tg", "tm", "rg", "rm", "cg", "cm", "eg", "em", "dg", "dm"]
+    floor_01 = [
+        "polg",
+        "prog",
+        "tg",
+        "tm",
+        "rg",
+        "rm",
+        "cg",
+        "cm",
+        "eg",
+        "em",
+        "dg",
+        "dm",
+    ]
     e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
 
-    response = print_results(r)
+    response = get_results(r, silent=True)
     # print(response-1)
     assert response - 1 == 71
-
