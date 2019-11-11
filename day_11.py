@@ -19,13 +19,8 @@ def bfs(state, goal, successors):
     count = 1
     while frontier:
         count += 1
-
         current_node = frontier.popleft()
         current_state = current_node.state
-
-        # if count % 1_000 == 0:
-        #     print(f"[{count}] Still Working...")
-        #     print(current_state)
 
         if goal(current_state):
             print(f"Processed {count} nodes.")
@@ -71,9 +66,7 @@ class ElevatorState:
         )
 
     def __hash__(self):
-        return (
-                hash(str(self))
-        )
+        return hash(str(self))
 
     def goal(self) -> bool:
         return self.floor[1] == self.floor[2] == self.floor[3] == []
@@ -89,10 +82,8 @@ class ElevatorState:
             if len(set(o[-1] for o in orphans)) == 2:
                 return False
 
-            if pairs:
-                for o in orphans:
-                    if o[-1] == 'm':
-                        return False
+            if pairs and any(o.endswith('m') for o in orphans):
+                return False
 
         return True
 
@@ -182,7 +173,7 @@ if __name__ == "__main__":
     e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
     response = print_results(r)
-    print(response - 1)
+    # print(response - 1)
     assert response - 1 == 11, f"expected 11, but received [{response}]."
 
     current_floor = 4
@@ -193,7 +184,7 @@ if __name__ == "__main__":
     e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
     response = print_results(r)
-    print(response - 1)
+    # print(response - 1)
     assert response - 1 == 6
 
     current_floor = 1
@@ -205,4 +196,19 @@ if __name__ == "__main__":
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
 
     response = print_results(r)
-    print(response - 1)
+    # print(response - 1)
+    assert response - 1 == 47
+
+    # Part 2
+    current_floor = 1
+    floor_04 = []
+    floor_03 = []
+    floor_02 = ["polm", "prom"]
+    floor_01 = ["polg", "prog", "tg", "tm", "rg", "rm", "cg", "cm", "eg", "em", "dg", "dm"]
+    e = ElevatorState(current_floor, floor_01, floor_02, floor_03, floor_04)
+    r = bfs(e, ElevatorState.goal, ElevatorState.successors)
+
+    response = print_results(r)
+    # print(response-1)
+    assert response - 1 == 71
+
