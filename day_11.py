@@ -57,10 +57,10 @@ class ElevatorState:
         pairs, orphans = self.get_pairs_and_orphans(self.floor[cf])
 
         for (a, b) in combinations(self.floor[cf], 2):
-            temp = self.get_window((a, b), lf)
-            es = ElevatorState(lf, temp[1], temp[2], temp[3], temp[4])
-            if es.is_legal():
-                sucs.append(es)
+            # temp = self.get_window((a, b), lf)
+            # es = ElevatorState(lf, temp[1], temp[2], temp[3], temp[4])
+            # if es.is_legal():
+            #     sucs.append(es)
 
             temp = self.get_window((a, b), uf)
             es = ElevatorState(uf, temp[1], temp[2], temp[3], temp[4])
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
 
     response = get_node_path_results(r, silent=True)
-    # print(response - 1)
+    print(f"Part01: {response - 1}")
     assert response - 1 == 47
 
     # Part 2
@@ -171,5 +171,5 @@ if __name__ == "__main__":
     r = bfs(e, ElevatorState.goal, ElevatorState.successors)
 
     response = get_node_path_results(r, silent=True)
-    # print(response-1)
+    print(f"Part02: {response-1}")
     assert response - 1 == 71
