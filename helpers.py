@@ -56,33 +56,46 @@ def time_it_all(args: List):
 
 
 class Node:
-    def __init__(self, state, parent):
+    def __init__(self, state, parent, level=1):
         self.state = state
         self.parent = parent
+        self.level = level
 
     def __repr__(self):
         return f"Node({self.state!r}, {self.parent!r})"
 
 
-def bfs(state, goal, successors):
+def bfs(state, goal, successors, by_level=None):
+    spaces_visited_at_level = []
     frontier = deque([Node(state, None)])
     visited = {hash(state)}
 
     count = 1
     while frontier:
         count += 1
+
         current_node = frontier.popleft()
         current_state = current_node.state
+        current_level = current_node.level
 
         if goal(current_state):
-            # print(f"Processed {count} nodes.")
             return current_node
 
         for neighbor in successors(current_state):
             if hash(neighbor) in visited:
                 continue
             visited.add(hash(neighbor))
-            frontier.append(Node(neighbor, current_node))
+            frontier.append(Node(neighbor, current_node, level=current_level + 1))
+
+        # Not sure how to make this more generic
+        if by_level is not None:
+            if by_level == current_level:
+                spaces_visited_at_level = len(visited)
+            if current_level == by_level + 1:
+                print(
+                    f"At depth of [{by_level}]: Visited {spaces_visited_at_level} unique states."
+                )
+                by_level = None  # stop this check
 
     return None
 
