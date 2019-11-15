@@ -45,3 +45,15 @@ if __name__ == "__main__":
     ]
     part_01 = spin_tumbler(part1)
     assert part_01 == 203660
+
+    part2 = [
+        Disc(10, 13),
+        Disc(15, 17),
+        Disc(17, 19),
+        Disc(1, 7),
+        Disc(0, 5),
+        Disc(1, 3),
+        Disc(0, 11),  # new
+    ]
+    part_02 = spin_tumbler(part2)
+    assert part_02 == 2408135
