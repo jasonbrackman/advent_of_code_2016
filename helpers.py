@@ -65,7 +65,9 @@ class Node:
         return f"Node({self.state!r}, {self.parent!r})"
 
 
-def bfs(state, goal, successors, by_level=None):
+def bfs(state, goal, successors, by_level=None, min_path_length=0, debug=False):
+    longest_path = 0
+
     spaces_visited_at_level = []
     frontier = deque([Node(state, None)])
     visited = {hash(state)}
@@ -77,8 +79,12 @@ def bfs(state, goal, successors, by_level=None):
         current_node = frontier.popleft()
         current_state = current_node.state
         current_level = current_node.level
-
+        if debug:
+            print(current_state)
         if goal(current_state):
+            if current_level < min_path_length:
+                longest_path = current_level
+                continue
             return current_node
 
         for neighbor in successors(current_state):
@@ -97,10 +103,13 @@ def bfs(state, goal, successors, by_level=None):
                 )
                 by_level = None  # stop this check
 
+    if min_path_length > 0:
+        raise AttributeError(f"Longest Path greater than [{min_path_length}] is: (1 indexed) {longest_path}")
+
     return None
 
 
-def get_node_path_results(result, silent=True):
+def get_node_path_results(result, silent=False):
     flatten_nodes = list()
     if result is not None:
         flatten_nodes.append(result.state)
