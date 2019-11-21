@@ -1,9 +1,9 @@
 import helpers
 from collections import deque
+from itertools import permutations
 
 
 def hash_text(puzzle_start, lines):
-
     for line in lines:
 
         cmd, *args = line.split()
@@ -70,7 +70,11 @@ if __name__ == "__main__":
     r = hash_text(puzzle_start, lines)
     print("Part01:", r)
 
-    # Not yet done
-    puzzle_start = "fbgdceah"
-    r = hash_text(puzzle_start, reversed(lines))
-    print("Part02:", r)
+    # Just brute force the hash against all permutations...
+    combos = permutations("abcdefgh")
+    for combo in combos:
+        puzzle_start = "".join(combo)
+        r = hash_text(puzzle_start, lines)
+        if r == "fbgdceah":
+            print("Part02:", puzzle_start)
+            break
