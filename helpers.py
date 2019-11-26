@@ -24,9 +24,12 @@ from __future__ import annotations
 import json
 import time
 from collections import deque
-from heapq import heappop, heappush
+from heapq import heappop, heappush, heapify
 from multiprocessing import Pool
 from typing import Callable, Dict, Generic, List, Optional, TypeVar
+
+# from queue import PriorityQueue
+
 
 T = TypeVar("T")
 
@@ -55,14 +58,55 @@ def time_it_all(args: List):
         p.map(time_it, args)
 
 
+class PriorityQueue(Generic[T]):
+    def __init__(self) -> None:
+        self._container: List[T] = []
+
+    @property
+    def empty(self) -> bool:
+        return not self._container  # not is true for empty container
+
+    def push(self, item: T) -> None:
+        heappush(self._container, item)  # in by priority
+
+    def pop(self) -> T:
+        return heappop(self._container)  # out by priority
+
+    def __repr__(self) -> str:
+        return repr(self._container)
+
+
 class Node:
-    def __init__(self, state, parent, level=1):
+    def __init__(
+        self, state, parent, level=1, cost: float = 0.0, heuristic: float = 0.0
+    ):
         self.state = state
         self.parent = parent
         self.level = level
+        self.cost = cost
+        self.heuristic = heuristic
 
     def __repr__(self):
-        return f"Node({self.state!r}, {self.parent!r})"
+        return f"Node({self.state!r}, {self.parent!r}, {self.level=}, {self.cost=}, {self.heuristic=})"
+
+    def __lt__(self, other: Node) -> bool:
+        return (self.cost + self.heuristic) < (other.cost + other.heuristic)
+
+
+class Node2(Generic[T]):
+    def __init__(
+        self, state: T, parent: Optional[Node2], cost: float = 0.0, heuristic: float = 0.0
+    ):
+        self.state = state
+        self.parent = parent
+        self.cost = cost
+        self.heuristic = heuristic
+
+    def __repr__(self):
+        return f"Node2({self.state!r}, {self.parent!r}, {self.cost=}, {self.heuristic=})"
+
+    def __lt__(self, other: Node) -> bool:
+        return (self.cost + self.heuristic) < (other.cost + other.heuristic)
 
 
 def bfs(state, goal, successors, by_level=None, min_path_length=0, debug=False):
@@ -79,7 +123,8 @@ def bfs(state, goal, successors, by_level=None, min_path_length=0, debug=False):
         current_node = frontier.popleft()
         current_state = current_node.state
         current_level = current_node.level
-        if debug:
+        if debug and count % 100 == 0:
+            print(f"{count:^10}")
             print(current_state)
         if goal(current_state):
             if current_level < min_path_length:
@@ -104,9 +149,43 @@ def bfs(state, goal, successors, by_level=None, min_path_length=0, debug=False):
                 by_level = None  # stop this check
 
     if min_path_length > 0:
-        raise AttributeError(f"Longest Path greater than [{min_path_length}] is: (1 indexed) {longest_path}")
+        raise AttributeError(
+            f"Longest Path greater than [{min_path_length}] is: (1 indexed) {longest_path}"
+        )
 
     return None
+
+
+def astar(
+    initial: T,
+    goal_test: Callable[[T], bool],
+    successors: Callable[[T], List[T]],
+    heuristic: Callable[[T], float],
+) -> Optional[Node2[T]]:
+    # frontier is where we've yet to go
+    frontier: PriorityQueue[Node2[T]] = PriorityQueue()
+    frontier.push(
+        Node2(initial, None, cost=0.0, heuristic=initial.heuristic())
+    )  # explored is where we've been
+    explored: Dict[T, float] = {hash(initial): 0.0}
+    # keep going while there is more to explore
+    while not frontier.empty:
+        current_node: Node2[T] = frontier.pop()
+        current_state: T = current_node.state  # if we found the goal, we're done
+        print(current_state)
+        # print(current_node.cost)
+        # print(current_state.heuristic())
+        if goal_test(current_state):
+            return current_node
+        # check where we can go next and haven't explored
+        for child in successors(current_state):
+            new_cost: float = current_node.cost + 1  # assumes a grid, need a cost function for more sophisticated apps
+
+            if hash(child) not in explored or explored[hash(child)] > new_cost:
+                explored[hash(child)] = new_cost
+                frontier.push(Node2(child, current_node, new_cost, child.heuristic()))
+
+    return None  # went through everything and never found goal
 
 
 def get_node_path_results(result, silent=False):
