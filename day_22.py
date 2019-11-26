@@ -88,7 +88,7 @@ class PuzzleState:
         x_dist: int = abs(x1 - (x2 - 1))
         y_dist: int = abs(y1 - y2)
 
-        return x_dist + y_dist
+        return x_dist + y_dist + (x2 - 1) * 100
 
     def goal(self):
         return self.identify_pos(self.goal) == (0, 0)
@@ -193,25 +193,23 @@ class PuzzleState:
 
 
 if __name__ == "__main__":
+    import time
+
+    t1 = time.perf_counter()
 
     goal_node = Node("/dev/grid/node-x35-y0", 65, 27)
     m = PuzzleState(r"./data/day_22.txt", goal_node)
 
-    # goal_node = Node("/dev/grid/node-x2-y0", 6, 4)
-    # m = PuzzleState(r"./data/day_22_test.txt", goal_node)
-    # print(m)
-    # for x in m.successors():
-    #     print(x)
+    # part one
+    part_01 = m.get_valid_pairs()
+    print("Part01:", part_01)
+
     r = astar(m, PuzzleState.goal, PuzzleState.successors, PuzzleState.heuristic)
-    print(r)
     if r:
         count = 0
         while r.parent:
             count += 1
             r = r.parent
         print(f"Completed Part 2 in {count} steps.")
-    # get_node_path_results(r)
 
-    # part one
-    part_01 = m.get_valid_pairs()
-    print("Part01:", part_01)
+    print(f"Completed Day 22: {time.perf_counter() - t1}")

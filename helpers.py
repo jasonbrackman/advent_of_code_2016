@@ -172,9 +172,7 @@ def astar(
     while not frontier.empty:
         current_node: Node2[T] = frontier.pop()
         current_state: T = current_node.state  # if we found the goal, we're done
-        print(current_state)
-        # print(current_node.cost)
-        # print(current_state.heuristic())
+
         if goal_test(current_state):
             return current_node
         # check where we can go next and haven't explored
