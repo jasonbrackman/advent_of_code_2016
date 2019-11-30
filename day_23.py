@@ -53,11 +53,10 @@ class Machine:
                     op = "cpy" if op == "jnz" else "jnz"
 
                 self.instructions[arg1] = (op, args)
-            else:
-                print(
-                    f"skipping a toggle out of bounds: {arg1} / {len(self.instructions)-1}"
-                )
-            # self.pprint_debug()
+
+            if self.record_telemetry:
+                self.pprint_debug()
+
         elif op == "cpy":
             # Copies arg1 (reg/value) to register in arg2
             arg1, arg2 = args
@@ -141,11 +140,23 @@ if __name__ == "__main__":
     assert test.registers["a"] == 3
 
     t1 = time.perf_counter()
-    part1 = Machine(puzzle_path, a=7, record_telemetry=False, hack=True)
+    record_telemetry = True
+    part1 = Machine(puzzle_path, a=7, record_telemetry=record_telemetry, hack=False)
     assert part1.registers["a"] == 11683
     print("Part01:", part1.registers["a"])
+    if record_telemetry:
+        """
+        04: cpy ['b', 'c']      | cpy(1,2)   # Put 'b' register into 'c'
+        05: inc ['a']           | inc(5040)  # a++ while c is not zero and d is not zero
+        06: dec ['c']           | dec(2)     # c--
+        07: jnz ['c', '-2']     | jnz(2,-2)  # INNER LOOP (add c to a)
+        08: dec ['d']           | dec(0)     # d--
+        09: jnz ['d', '-5']     | jnz(0,-5)  # OUTER LOOP (loop d times)
+        
+        Most hit lines > 8000x vs. 12 or less for the rest on part01.
+        """
 
-    # print("Telemetry:", part1.telemetry)
+        print("Telemetry:", part1.telemetry)
 
     part2 = Machine(puzzle_path, a=12, hack=True)
     assert part2.registers["a"] == 479008243
