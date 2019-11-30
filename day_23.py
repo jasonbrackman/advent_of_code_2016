@@ -2,7 +2,8 @@ import helpers
 
 
 class Machine:
-    def __init__(self, data, a=None):
+    def __init__(self, data, a=None, record_telemetry=False, hack=False):
+
         self.registers = {"a": 0, "b": 0, "c": 0, "d": 0}
         self.toggle_cache = dict()
         self.pointer: int = 0
@@ -11,6 +12,13 @@ class Machine:
             self.registers["a"] = a
 
         self.instructions = self.prep_instructions(data)
+
+        self.hack = hack
+        self.record_telemetry = record_telemetry
+        if self.record_telemetry:
+            # Required to find out which lines were getting hit a lot
+            # stuck to the lines before toggle for optimization since after would change.
+            self.telemetry = {x: 0 for x in range(len(self.instructions))}
 
         while self.pointer < len(self.instructions):
             self.op_code()
@@ -25,8 +33,10 @@ class Machine:
         return instructions
 
     def op_code(self):
-        op, args = self.instructions[self.pointer]
+        if self.record_telemetry:
+            self.telemetry[self.pointer] += 1
 
+        op, args = self.instructions[self.pointer]
         pointer_jump = 1
 
         if op == "tgl":
@@ -47,15 +57,7 @@ class Machine:
                 print(
                     f"skipping a toggle out of bounds: {arg1} / {len(self.instructions)-1}"
                 )
-
-            for index, items in enumerate(self.instructions):
-                op_code = items[0]
-                args = []
-                for i in range(len(items[1])):
-                    args.append(str(self.get_value(items[1][i])))
-                print(f"{index:02}: {items[0]} {str(items[1]):<15} | {op_code}({','.join(args)})")
-            print(f"{self.registers}")
-
+            # self.pprint_debug()
         elif op == "cpy":
             # Copies arg1 (reg/value) to register in arg2
             arg1, arg2 = args
@@ -63,10 +65,24 @@ class Machine:
             self.registers[arg2] = arg1
 
         elif op == "inc":
-            # Increases arg1 register by one
-            self.registers[args[0]] += 1
+            if self.hack and self.pointer == 5:
+                # a, c, d
+                # a * c * (d * b)
+                # c must get to zero
+                # d must get to zero
+                result = (self.registers["a"] + self.registers["c"]) * (
+                    self.registers["d"]
+                )
+                self.registers["a"] = result
+                self.registers["c"] = 1
+                self.registers["d"] = 1
+
+            else:
+                # Increases arg1 register by one
+                self.registers[args[0]] += 1
 
         elif op == "dec":
+            #     self.registers['d'] = 0
             # Decreases arg1 register by one
             self.registers[args[0]] -= 1
 
@@ -87,6 +103,27 @@ class Machine:
 
         self.pointer += pointer_jump
 
+    def pprint_debug(self):
+        for index, items in enumerate(self.instructions):
+            op_code = items[0]
+            args = []
+            for i in range(len(items[1])):
+                args.append(str(self.get_value(items[1][i])))
+
+            icon = "<==" if index == self.pointer else ""
+            comments = {
+                5: "'a' + r'c'-1 * 'd' and then leave one at c",
+                8: "'d' * 'b'-1",
+                13: "'c' + 'd', d = 0",
+            }
+            comment = comments.get(index, "")
+            icon = icon + "" + comment
+
+            print(
+                f"{index:02}: {items[0]} {str(items[1]):<15} | {op_code}({','.join(args)}) {icon}"
+            )
+        print(f"{self.registers}")
+
     def get_value(self, arg):
         value = self.registers.get(arg, None)
         if value is not None:
@@ -95,65 +132,23 @@ class Machine:
 
 
 if __name__ == "__main__":
+    import time
 
     data_test = r"./data/day_23_test.txt"
+    puzzle_path = r"./data/day_23.txt"
+
     test = Machine(data_test)
     assert test.registers["a"] == 3
 
-    puzzle_path = r"./data/day_23.txt"
-    part1 = Machine(puzzle_path, a=7)
+    t1 = time.perf_counter()
+    part1 = Machine(puzzle_path, a=7, record_telemetry=False, hack=True)
     assert part1.registers["a"] == 11683
+    print("Part01:", part1.registers["a"])
 
-    part2 = Machine(puzzle_path, a=12)
-    print(part2.registers["a"])
+    # print("Telemetry:", part1.telemetry)
 
-"""
-0 cpy a b
-1 dec b
-2 cpy a d
-3 cpy 0 a
-4 cpy b c
-5 inc a
-6 dec c
-7 jnz c -2
-8 dec d
-9 jnz d -5
-10 dec b
-11 cpy b c
-12 cpy c d
-13 dec d
-14 inc c
-15 jnz d -2
-16 tgl c
-17 cpy -16 c
-18 jnz 1 c
-19 cpy 73 c
-20 jnz 91 d
-21 inc a
-22 inc d
-23 jnz d -2
-24 inc c
-25 jnz c -5
-dict_items([(24, ('dec', ['c'])), (22, ('dec', ['d'])), (20, ('cpy', ['91', 'd']))])
-{'a': 239500800, 'b': 2, 'c': 4, 'd': 0}
+    part2 = Machine(puzzle_path, a=12, hack=True)
+    assert part2.registers["a"] == 479008243
+    print("Part02:", part2.registers["a"])
 
-dict_items(
-    [
-    (24, ('dec', ['c'])), 
-    (22, ('dec', ['d'])), 
-    (20, ('cpy', ['91', 'd'])),
-    (18, ('cpy', ['1', 'c']))
-    ])
-
-{'a': 479001600, 'b': 0, 'c': 2, 'd': 0}
-
-132
-1320
-11880
-95040
-665280
-3991680
-19958400
-79833600
-239500800
-479001600‬"""
+    print(f"Completed Day 23: {time.perf_counter() - t1}")
