@@ -3,7 +3,7 @@ import helpers
 
 class Machine:
     def __init__(self, data, a=None, record_telemetry=False, hack=False):
-
+        self.output = []
         self.registers = {"a": 0, "b": 0, "c": 0, "d": 0}
         self.toggle_cache = dict()
         self.pointer: int = 0
@@ -22,6 +22,8 @@ class Machine:
 
         while self.pointer < len(self.instructions):
             self.op_code()
+
+
 
     @staticmethod
     def prep_instructions(data):
@@ -94,6 +96,14 @@ class Machine:
 
             if arg1 != 0:
                 pointer_jump = arg2
+
+        elif op == "out":
+            arg1 = self.get_value(args[0])
+
+            if len(self.output) < 10:
+                self.output.append(arg1)
+            else:
+                raise Exception(self.output)
 
         else:
             raise ValueError(f"Unknown opcode: {op}")
